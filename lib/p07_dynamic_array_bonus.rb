@@ -25,6 +25,8 @@ class StaticArray
 end
 
 class DynamicArray
+  include Enumerable
+
   attr_reader :count
 
   def initialize(capacity = 8)
@@ -54,6 +56,7 @@ class DynamicArray
   end
 
   def push(val)
+    resize! if @count == capacity
     idx = 0
     while idx < capacity
       if @store[idx].nil?
@@ -96,15 +99,36 @@ class DynamicArray
   end
 
   def shift
+    el = @store[0]
+    @store[0] = nil
+    @count -= 1
+    idx = 1
+    while idx < capacity
+      @store[idx - 1] = @store[idx]
+      idx += 1
+    end
+    el
   end
 
   def first
+    @store[0]
   end
 
   def last
+    idx = capacity - 1
+    while idx >= 0
+      return @store[idx] unless @store[idx].nil?
+      idx -= 1
+    end
   end
 
   def each
+    idx = 0
+    while idx < capacity
+      yield(@store[idx])
+      idx += 1
+    end
+
   end
 
   def to_s
@@ -114,6 +138,9 @@ class DynamicArray
   def ==(other)
     return false unless [Array, DynamicArray].include?(other.class)
     # ...
+    return false unless length == other.length
+    each_with_index { |el, i| return false unless el == other[i] }
+    true
   end
 
   alias_method :<<, :push
